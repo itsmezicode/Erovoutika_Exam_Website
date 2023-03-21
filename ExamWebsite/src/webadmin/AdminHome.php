@@ -5,6 +5,11 @@ if($_SESSION['admin_sid']==session_id())
 {
     $clUrID = $_SESSION['clUrID'];
     $clUrUsername = $_SESSION['clUrUsername'];
+
+    // User profile photo
+    $result = mysqli_query($connectdb, "SELECT clUrPhoto from tbusers where clUrID = $clUrID;");
+    $row = $result->fetch_assoc();
+     
 ?>
 <!DOCTYPE html>
 <html>
@@ -39,8 +44,15 @@ if($_SESSION['admin_sid']==session_id())
             </div>
             <div id="i--account--admin">
                 <div class="header_img"> 
-                    <a href="AdminProfile.php">
-                        <img src="../images/Display Picture Icon.png" alt="display picture"> 
+                    <a href="AdminHome.php">
+                        <?php 
+                            if ($row['clUrPhoto'] == ""){
+                                echo '<img src="../images/Display Picture Icon.png" alt="display picture">'; 
+                            }
+                            else{
+                                echo '<img src="../images/user images/'. $row['clUrPhoto'] .'" alt="display picture">';
+                            }
+                        ?>
                     </a>
                 </div>
                 <div>
@@ -93,14 +105,21 @@ if($_SESSION['admin_sid']==session_id())
                 <!-- Profile Banner -->
                 <div class="row" id="i--row--banner">
                     <div class="col-2">
-                        <img src="../images/Display Picture Icon.png" alt="Photo/Icon" class="img-fluid m-3" id="i--banner--dp">
+                        <?php
+                            if ($row['clUrPhoto'] == ""){
+                                echo '<img src="../images/Display Picture Icon.png" alt="Photo/Icon" class="img-fluid m-3" id="i--banner--dp">';
+                            }
+                            else{
+                                echo '<img src="../images/user images/'. $row['clUrPhoto'] .'" alt="Photo/Icon" class="img-fluid m-3" id="i--banner--dp">';
+                            }
+                        ?>
                     </div>
                     <div class="col-8">
                         <h1 class="text-light mt-2" id="i--banner--title">Welcome, <?php echo $clUrUsername ?></h1>
                         <p class="text-light" id="i--banner--subtitle">You can manage the exam website here</p>
                     </div>
                     <div class="col-2">
-                        <a role="button" class="btn btn-light my-3" id="i--button--editProfile">Edit Profile</a>
+                        <a href = "AdminProfile.php" role="button" class="btn btn-light my-3" id="i--button--editProfile">Edit Profile</a>
                     </div>
                 </div>
                 <!-- Edit History -->
@@ -123,11 +142,18 @@ if($_SESSION['admin_sid']==session_id())
                 -->
                 <?php
 
-                    $sql = "SELECT * FROM tbexam";
+                    $sql = "SELECT * FROM tbexam order by clExLastEditDate desc";
                     $result = $connectdb->query($sql);
+                    
 
                     if ($result->num_rows > 0) {
                     while($row = $result->fetch_assoc()) {
+                        // To fetch the last editor of the exam
+                        $UrLastEditor = $row["clExLastEditedBy"];
+                        $query = "SELECT clUrUsername FROM tbusers WHERE clUrID = $UrLastEditor";
+                        $rs = $connectdb->query($query);
+                        $rw = $rs->fetch_assoc();
+
                         echo '<div class="col-12">';
                         echo '<div class="card" id="i--card--edit">
                                 <div class="card-body">
@@ -137,10 +163,13 @@ if($_SESSION['admin_sid']==session_id())
                                         </div>
                                         <div class="row" id="i--line--card"></div>
                                         <div class="row mt-4 fs-5">
-                                            EDIT DATE:
+                                            EXAM DESCRIPTION: '.$row["clExDescription"].'
                                         </div>
                                         <div class="row my-2 fs-5">
-                                        EDIT DETAILS:
+                                        EDIT DATE: '.$row["clExLastEditDate"].'
+                                        </div>
+                                        <div class="row my-2 fs-5">
+                                        EDITED BY: '.$rw["clUrUsername"].'
                                         </div>';
                         echo '      </div>
                                 </div>
